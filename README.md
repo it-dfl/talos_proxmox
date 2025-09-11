@@ -35,7 +35,7 @@ This Ansible role automates the provisioning and configuration of a Talos-based 
    ```
 4. Install this role
    ```bash
-   ansible-galaxy role install https://github.com/it-dfl/talos_proxmox
+   ansible-galaxy role install git+https://github.com/it-dfl/talos_proxmox
    ```
 
 ## Sequence
