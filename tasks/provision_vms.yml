@@ -1,0 +1,82 @@
+---
+# Provision VMs on Proxmox for masters and workers
+
+- name: Download Talos ISO to Proxmox storage
+  ansible.builtin.uri:
+    url: "{{ proxmox_storage_url }}/download-url"
+    method: POST
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+    body_format: form-urlencoded
+    body:
+      content: iso
+      filename: "talos-{{ talos_version }}-amd64.iso"
+      url: "{{ talos_iso_download_url }}"
+    validate_certs: no
+    return_content: yes
+  when: proxmox_api_token_id is defined and proxmox_api_token_secret is defined and (proxmox_api_token_id | length) > 0
+
+- name: Wait for ISO to be available in Proxmox storage
+  ansible.builtin.uri:
+    url: "{{ proxmox_storage_url }}/content"
+    method: GET
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+    validate_certs: no
+    return_content: yes
+  register: iso_content
+  until: (proxmox_storage ~ ':iso/talos-' ~ talos_version ~ '-amd64.iso') in (iso_content.json.data | map(attribute='volid') | list)
+  failed_when: false
+  retries: 10
+  delay: 6
+
+- name: Create talos VMs
+  community.proxmox.proxmox_kvm:
+    api_user: "{{ proxmox_api_user }}"
+    api_host: "{{ proxmox_server }}"
+    api_port: "{{ proxmox_port }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    node: "{{ proxmox_node }}"
+    name: "{{ item.name }}"
+    cores: "{{ item.cores }}"
+    memory: "{{ item.memory }}"
+    cpu: "{{ talos_cpu_type}}"
+    net:
+      net0: "model=virtio,bridge={{ k8s_vmbr }},firewall=0{% if mgmt_vlan_id %}{{ ',tag=' ~ mgmt_vlan_id }}{% endif %}"
+    ostype: l26
+    scsihw: virtio-scsi-single
+    onboot: yes
+    agent: true
+    state: present
+    scsi: "{{
+      ({ 'scsi0': proxmox_vm_storage ~ ':' ~ item.disk ~ ',format=raw' })
+      | combine(
+        ( { 'scsi1': proxmox_vm_storage ~ ':' ~ item.storage_disk ~ ',format=raw' } )
+        if (item.storage_disk | default(0, true) | int) > 0 else {}
+      )
+    }}"
+    ide:
+      ide2: "{{ proxmox_storage }}:iso/talos-{{ talos_version }}-amd64.iso,media=cdrom"
+  loop: "{{ masters + workers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Start talos VMs
+  community.proxmox.proxmox_kvm:
+    api_user: "{{ proxmox_api_user }}"
+    api_host: "{{ proxmox_server }}"
+    api_port: "{{ proxmox_port }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    node: "{{ proxmox_node }}"
+    name: "{{ item.name }}"
+    state: started
+  loop: "{{ masters + workers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Wait for the VMs to be fully started
+  ansible.builtin.wait_for:
+    timeout: 60
+  delegate_to: localhost

@@ -1,0 +1,57 @@
+# Contains the talos machine configuration overrides for all nodes
+version: v1alpha1
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        {% if enable_vlans -%}
+        vlans:
+          - vlanId: {{ mgmt_vlan_id }}
+            dhcp: false
+            routes:
+              - network: 0.0.0.0/0
+                gateway: {{ mgmt_gateway }}
+          {% for vlan in vlan_config -%}
+          - vlanId: {{ vlan.vlan_id }}
+            dhcp: false
+            addresses: []  # Multus will assign pod IPs
+          {% endfor -%}
+        {% else -%}
+        routes:
+          - network: 0.0.0.0/0
+            gateway: {{ mgmt_gateway }}
+        {% endif %}
+
+    nameservers:
+        {% for ns in nameservers -%}
+        - {{ ns }}
+        {% endfor %}
+
+    extraHostEntries:
+      - ip: {{ cluster_shared_ip }}
+        aliases:
+            - {{ cluster_name | split('.') | first }}
+            - {{ cluster_name }}
+
+  install:
+    disk: {{ talos_installation_disk_path }}
+#    image: {{ talos_qemu_agent_path }}:{{ talos_version }} 
+    wipe: {{ talos_installation_disk_wipe | default(false, true) }}
+
+  time:
+    disabled: false
+    servers:
+      {% for ts in timeservers -%}
+      - {{ ts }}
+      {% endfor %}
+
+  sysctls:
+    net/ipv6/conf/all/disable_ipv6: "{% if disable_ipv6 %}1{% else %}0{% endif %}"
+
+cluster:
+  apiServer:
+    certSANs:
+      - {{ cluster_name | split('.') | first }}
+      - {{ cluster_shared_ip }}

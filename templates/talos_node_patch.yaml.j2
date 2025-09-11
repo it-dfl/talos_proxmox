@@ -1,0 +1,52 @@
+# Contains the talos machine configuration overrides specific for each node
+version: v1alpha1
+machine:
+  network:
+    hostname: {{ node.name }}
+    interfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        {% if enable_vlans -%}
+        vlans:
+          - vlanId: {{ mgmt_vlan_id }}
+            addresses:
+              - {{ node.ip }}/24
+            {% if node is in masters -%}
+            vip:
+              ip: {{ cluster_shared_ip }}
+            {% endif -%}
+        {% else -%}
+        addresses:
+          - {{ node.ip }}/24
+        {% if node is in masters -%}
+        vip:
+          ip: {{ cluster_shared_ip }}
+        {% endif %}
+        {% endif %}
+
+{% if (node.storage_disk | default(0, true) | int) > 0 %}
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: storage-data # Name of the volume.
+# The provisioning describes how the volume is provisioned.
+provisioning:
+  # The disk selector expression.
+  diskSelector:
+    match: disk.transport == "virtio" && !system_disk
+
+  # The minimum size of the volume. Set it to halve of the configured size
+  minSize: {{ (node.storage_disk | int // 2) }}GiB
+# The filesystem describes how the volume is formatted.
+filesystem:
+    type: xfs # Filesystem type. Default is `xfs`.
+{% if (node.storage_disk_encryption_key | default("", true) | length) > 0 %}
+encryption:
+    provider: luks2
+    keys:
+        - slot: 0
+          static:
+            passphrase: {{ node.storage_disk_encryption_key }}
+{% endif -%}
+{% endif -%}

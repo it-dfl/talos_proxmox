@@ -1,0 +1,46 @@
+---
+# Install Talos / Apply Talos configuration
+
+- name: Get Talos VM network information
+  community.proxmox.proxmox_vm_info:
+    api_user: "{{ proxmox_api_user }}"
+    api_host: "{{ proxmox_server }}"
+    api_port: "{{ proxmox_port }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    node: "{{ proxmox_node }}"
+    name: "{{ item.name }}"
+    type: qemu
+    network: true
+  register: vm_info
+  loop: "{{ masters + workers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Build node -> primary IPv4 map (exclude loopback)
+  vars:
+    net_entries: "{{ vm.proxmox_vms[0].network | default([]) }}"
+    all_ips: "{{ net_entries | selectattr('ip-addresses','defined') | map(attribute='ip-addresses') | sum(start=[]) }}"
+    ipv4s: "{{ all_ips | selectattr('ip-address-type','equalto','ipv4') | map(attribute='ip-address') | reject('match','^127\\.') | list }}"
+  ansible.builtin.set_fact:
+    talos_node_ips: "{{ talos_node_ips | default({}) | combine({ vm.item.name: (ipv4s[0] if ipv4s | length > 0 else None) }) }}"
+  loop: "{{ vm_info.results }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.item.name }}"
+
+- name: Install Talos on master nodes
+  include_tasks: install_talos_node.yml
+  vars:
+    current_node_type: "controlplane"
+  loop: "{{ masters }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install Talos on worker nodes
+  include_tasks: install_talos_node.yml
+  vars:
+    current_node_type: "worker"
+  loop: "{{ workers }}"
+  loop_control:
+    label: "{{ item.name }}"

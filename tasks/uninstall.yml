@@ -1,0 +1,17 @@
+---
+# Uninstall talos cluster
+
+- name: Delete talos VMs
+  community.proxmox.proxmox_kvm:
+    api_user: "{{ proxmox_api_user }}"
+    api_host: "{{ proxmox_server }}"
+    api_port: "{{ proxmox_port }}"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    node: "{{ proxmox_node }}"
+    name: "{{ item.name }}"
+    force: true
+    state: absent
+  loop: "{{ masters + workers }}"
+  loop_control:
+    label: "{{ item.name }}"

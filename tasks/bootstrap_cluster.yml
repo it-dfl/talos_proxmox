@@ -1,0 +1,56 @@
+---
+# Bootstrap Talos Kubernetes cluster and join nodes
+
+- name: Create talos configuration directory in homedir
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.talos"
+    mode: '0700'
+    state: directory
+
+- name: Copy talos config files to homedir
+  ansible.builtin.copy:
+    src: /tmp/.talos/talosconfig
+    dest: "{{ ansible_env.HOME }}/.talos/config"
+    mode: '0600'
+    remote_src: yes
+
+- name: Use talosctl commands for bootstrap
+  environment:
+    TALOSCONFIG: "{{ ansible_env.HOME }}/.talos/config"
+  block:
+
+    - name: Configure talos endpoints
+      ansible.builtin.command: talosctl config endpoint {{ masters | map(attribute='ip') | join(' ') }}
+
+    - name: Wait for Nodes to be ready for bootstrap
+      ansible.builtin.wait_for:
+        host: "{{ item.ip }}"
+        port: 50000
+        delay: 10
+        timeout: 300
+      loop: "{{ masters + workers }}"
+      loop_control:
+        loop_var: item
+
+    - name: Bootstrap Talos cluster on first master
+      ansible.builtin.command: talosctl bootstrap --nodes {{ masters[0].ip }}
+
+    - name: Wait for Kubernetes API to be available
+      ansible.builtin.wait_for:
+        host: "{{ cluster_shared_ip }}"
+        port: 6443
+        delay: 10
+        timeout: 300
+    
+    - name: Get kubeconfig from the cluster
+      ansible.builtin.command: talosctl kubeconfig --nodes {{ cluster_shared_ip }} --force
+
+- name: Ensure all kubernetes nodes are ready
+  kubernetes.core.k8s_info:
+    kind: Node
+  register: k8s_nodes
+  until: 
+    - k8s_nodes | json_query('resources[*].status.conditions[?type==`Ready`].status') | unique == [["True"]]
+    - k8s_nodes.resources | length >= (masters | length + workers | length)
+  retries: 30
+  delay: 6

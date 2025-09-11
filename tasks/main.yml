@@ -1,0 +1,39 @@
+---
+# Main task file for talos_proxmox role
+
+- name: Generate and distribute Talos configuration
+  import_tasks: configure_talos.yml
+  tags: [configure_talos]
+
+- import_tasks: provision_vms.yml
+  tags: [create_vms]
+
+- name: Install Talos on provisioned VMs
+  import_tasks: install_talos.yml
+  tags: [install_talos]
+
+- name: Bootstrap Talos Kubernetes cluster
+  import_tasks: bootstrap_cluster.yml
+  tags: [bootstrap_cluster]
+
+- name: Install and configure Multus CNI
+  import_tasks: install_multus.yml
+  tags: [install_multus]
+  when: enable_vlans
+
+- name: Deploy static resources
+  import_tasks: deploy_static_resources.yml
+  tags: [deploy_static_resources]
+
+- name: Install ArgoCD
+  import_tasks: install_argocd.yml
+  tags: [install_argocd]
+  when: install_argocd
+
+- name: Cleanup temporary files
+  import_tasks: cleanup.yml
+  tags: [cleanup]
+
+- name: Uninstall cluster
+  import_tasks: uninstall.yml
+  tags: [never, uninstall]

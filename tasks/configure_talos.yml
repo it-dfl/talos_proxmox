@@ -1,0 +1,39 @@
+---
+# Generate and distribute Talos configuration files
+
+- name: Ensure hidden talos directory exists
+  ansible.builtin.file:
+    path: /tmp/.talos
+    state: directory
+    mode: '0700'
+
+- name: Create Talos config patch file
+  ansible.builtin.template:
+    src: talos_config_patch.yaml.j2
+    dest: /tmp/.talos/talos_config_patch.yaml
+
+- name: Create talos node patch file
+  ansible.builtin.template:
+    src: talos_node_patch.yaml.j2
+    dest: /tmp/.talos/talos_node_patch_{{ node.name }}.yaml
+  loop: "{{ masters + workers }}"
+  loop_control:
+    loop_var: node
+    label: "{{ node.name }}"
+
+- name: Generate talos secrets
+  ansible.builtin.command:
+    cmd: >-
+      talosctl gen secrets --output-file /tmp/.talos/talos_secrets.yaml
+  args:
+    creates: /tmp/.talos/talos_secrets.yaml
+
+- name: Generate talos configuration files
+  ansible.builtin.command:
+    cmd: >-
+      talosctl gen config {{ cluster_name }} https://{{ cluster_name }}:6443
+      --with-secrets /tmp/.talos/talos_secrets.yaml
+      --output /tmp/.talos
+      --config-patch @/tmp/.talos/talos_config_patch.yaml
+      --force
+

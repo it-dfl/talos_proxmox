@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: it-dfl
+  description: >-
+    Ansible role to provision Talos Kubernetes clusters on Proxmox. Handles VM
+    provisioning, Talos per-node config ISO generation, Multus VLAN network
+    attachments, bootstrap via talosctl, creation of static resources 
+    and optional ArgoCD installation.
+  license: MIT
+  min_ansible_version: '2.12'
+  platforms:
+    - name: Proxmox
+  galaxy_tags:
+    - talos
+    - proxmox
+    - kubernetes
+    - multus
+
+dependencies: []
