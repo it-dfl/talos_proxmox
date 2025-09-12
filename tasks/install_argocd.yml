@@ -26,6 +26,41 @@
   retries: 30
   delay: 10
 
+- name: Ensure all argocd pods are running
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ argocd_app_namespace }}"
+  register: argocd_pod_list
+  until: argocd_pod_list|json_query('resources[*].status.phase')|unique == ["Running"]
+  retries: 30
+  delay: 6
+
+- name: Patch Health Assessment into argocd Configmap
+  kubernetes.core.k8s:
+    state: patched
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: argocd-cm
+        namespace: "{{ argocd_app_namespace }}"
+      data:
+        resource.customizations: |
+          argoproj.io/Application:
+            health.lua: |
+              hs = {}
+              hs.status = "Progressing"
+              hs.message = ""
+              if obj.status ~= nil then
+                if obj.status.health ~= nil then
+                  hs.status = obj.status.health.status
+                  if obj.status.health.message ~= nil then
+                    hs.message = obj.status.health.message
+                  end
+                end
+              end
+              return hs
+
 - name: Configure ArgoCD repository
   kubernetes.core.k8s:
     state: present
