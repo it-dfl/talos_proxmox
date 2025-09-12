@@ -52,8 +52,6 @@
               end
               return hs
 
-- meta: end_play
-
 - name: Configure ArgoCD repository
   kubernetes.core.k8s:
     state: present
