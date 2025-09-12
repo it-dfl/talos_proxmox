@@ -56,12 +56,14 @@
   kubernetes.core.k8s:
     state: present
     definition:
-      apiVersion: argoproj.io/v1alpha1
-      kind: Repository
+      apiVersion: v1
+      kind: Secret
       metadata:
         name: argocd-repo
         namespace: "{{ argocd_app_namespace }}"
-      spec:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      stringData:
         url: "{{ argocd_repo_url }}"
         type: "{{ argocd_repo_type }}"
         revision: "{{ argocd_repo_revision }}"
