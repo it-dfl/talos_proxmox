@@ -24,6 +24,17 @@ machine:
           ip: {{ cluster_shared_ip }}
         {% endif %}
         {% endif %}
+  {% if enable_longhorn_support %}
+  kubelet:
+    extraMounts:
+      - destination: /var/mnt/storage-data
+        type: bind
+        source: /var/mnt/storage-data
+        options:
+          - bind
+          - rshared
+          - rw
+  {% endif %}
 
 {% if (node.storage_disk | default(0, true) | int) > 0 %}
 ---

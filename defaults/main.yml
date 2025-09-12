@@ -16,8 +16,12 @@ proxmox_vm_storage: "local-lvm"
 proxmox_storage_url: "{{ proxmox_api_url }}/nodes/{{ proxmox_node }}/storage/{{ proxmox_storage }}"
 
 talos_version: "v1.11.1"
-talos_qemu_agent_path: "factory.talos.dev/image/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515"
-talos_iso_download_url: "https://{{ talos_qemu_agent_path }}/{{ talos_version }}/metal-amd64.iso"
+# The talos image will always use the qemu-guest-agent extension
+# Below you can enable additional extensions if needed
+# Enables support for Longhorn in the Talos ISO (iscsi-tools and util-linux-tools)
+enable_longhorn_support: true
+#talos: "factory.talos.dev/image/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515"
+#talos_iso_download_url: "https://{{ talos_qemu_agent_path }}/{{ talos_version }}/metal-amd64.iso"
 
 talos_installation_disk_path: "/dev/sda"  # Disk inside VM to install Talos onto (e.g. /dev/sda)
 talos_cpu_type: "kvm64"

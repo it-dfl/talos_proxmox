@@ -1,0 +1,8 @@
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/qemu-guest-agent
+      {% if enable_longhorn_support -%}
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools
+      {% endif %}

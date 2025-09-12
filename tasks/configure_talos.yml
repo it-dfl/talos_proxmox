@@ -7,6 +7,27 @@
     state: directory
     mode: '0700'
 
+- name: Create Talos ISO customization file
+  ansible.builtin.template:
+    src: talos_iso_customizations.yaml.j2
+    dest: /tmp/.talos/talos_iso_customizations.yaml
+
+- name: Get Talos ISO with customizations applied
+  ansible.builtin.uri:
+    url: "https://factory.talos.dev/schematics"
+    method: POST
+    body: "{{ lookup('file', '/tmp/.talos/talos_iso_customizations.yaml') }}"
+    headers:
+      Content-Type: "application/x-yaml"
+    return_content: yes
+  register: talos_iso_response
+
+- name: Set Talos ISO download URL and Installer Image
+  ansible.builtin.set_fact:
+    talos_iso_id: "{{ talos_iso_response.json.id }}"
+    talos_installer_image_url: "factory.talos.dev/metal-installer/{{ talos_iso_id }}:{{ talos_version }}"
+    talos_iso_download_url: "https://factory.talos.dev/image/{{ talos_iso_id }}/{{ talos_version }}/metal-amd64.iso"
+
 - name: Create Talos config patch file
   ansible.builtin.template:
     src: talos_config_patch.yaml.j2
