@@ -25,9 +25,8 @@
 
 - name: Set Talos ISO download URL and Installer Image
   ansible.builtin.set_fact:
-    talos_iso_id: "{{ talos_iso_response.json.id }}"
-    talos_installer_image_url: "factory.talos.dev/metal-installer/{{ talos_iso_id }}:{{ talos_version }}"
-    talos_iso_download_url: "https://factory.talos.dev/image/{{ talos_iso_id }}/{{ talos_version }}/metal-amd64.iso"
+    talos_installer_image_url: "factory.talos.dev/metal-installer/{{ talos_iso_response.json.id }}:{{ talos_version }}"
+    talos_iso_download_url: "https://factory.talos.dev/image/{{ talos_iso_response.json.id }}/{{ talos_version }}/metal-amd64.iso"
 
 - name: Create Talos config patch file
   ansible.builtin.template:

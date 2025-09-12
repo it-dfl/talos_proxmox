@@ -13,7 +13,7 @@
 - name: Install ArgoCD using official manifests
   kubernetes.core.k8s:
     state: present
-    src: https://raw.githubusercontent.com/argoproj/argo-cd/blob/master/manifests/install.yaml
+    src: https://raw.githubusercontent.com/argoproj/argo-cd/refs/heads/master/manifests/install.yaml
     namespace: "{{ argocd_app_namespace }}"
 
 - name: Wait for ArgoCD server deployment to be ready
@@ -25,15 +25,6 @@
   until: argocd_server.resources[0].status.readyReplicas | default(0) > 0
   retries: 30
   delay: 10
-
-- name: Ensure all argocd pods are running
-  kubernetes.core.k8s_info:
-    kind: Pod
-    namespace: "{{ argocd_app_namespace }}"
-  register: argocd_pod_list
-  until: argocd_pod_list|json_query('resources[*].status.phase')|unique == ["Running"]
-  retries: 30
-  delay: 6
 
 - name: Patch Health Assessment into argocd Configmap
   kubernetes.core.k8s:
@@ -60,6 +51,8 @@
                 end
               end
               return hs
+
+- meta: end_play
 
 - name: Configure ArgoCD repository
   kubernetes.core.k8s:
