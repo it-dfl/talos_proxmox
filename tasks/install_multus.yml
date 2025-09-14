@@ -17,6 +17,31 @@
     src: /tmp/.talos/multus-daemonset.yml
     state: present
 
+- name: Patch Multus DaemonSet to install cni plugins
+  kubernetes.core.k8s:
+    kind: DaemonSet
+    namespace: kube-system
+    name: kube-multus-ds
+    state: patched
+    definition:
+      spec:
+        template:
+          spec:
+            initContainers:
+              - name: install-cni-plugins
+                image: rancher/hardened-cni-plugins:v1.8.0-build20250909 # pin to a current tag
+                securityContext:
+                  privileged: true
+                env:
+                  - name: UPDATE_CNI_BINARIES
+                    value: "false"
+                  - name: SKIP_CNI_BINARIES
+                    value: "flannel,firewall"
+                volumeMounts:
+                  - name: cnibin
+                    mountPath: /host/opt/cni/bin
+                    mountPropagation: Bidirectional
+
 - name: Ensure all multus pods are running
   kubernetes.core.k8s_info:
     kind: Pod
