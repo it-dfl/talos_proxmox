@@ -7,6 +7,27 @@
     state: directory
     mode: '0700'
 
+- name: Add cilium helm repo if cilium is to be installed
+  ansible.builtin.command:
+    cmd: helm repo add cilium https://helm.cilium.io/
+  when: install_cilium
+
+- name: Generate cilium values file
+  ansible.builtin.template:
+    src: cilium_values.yaml.j2
+    dest: /tmp/.talos/cilium_values.yaml
+  when: install_cilium
+
+- name: Generate cilium manifests
+  ansible.builtin.command:
+    cmd: >-
+      helm template cilium cilium/cilium
+      --version {{ cilium_version }}
+      --namespace kube-system
+      --values /tmp/.talos/cilium_values.yaml
+  when: install_cilium
+  register: cilium_manifest
+
 - name: Create Talos ISO customization file
   ansible.builtin.template:
     src: talos_iso_customizations.yaml.j2

@@ -65,3 +65,27 @@ cluster:
     certSANs:
       - {{ cluster_name | split('.') | first }}
       - {{ cluster_shared_ip }}
+
+  {% if install_cilium -%}
+  network:
+    cni:
+      name: none
+  proxy:
+    disabled: true
+  {% endif %}
+
+  {% if install_cilium -%}
+  inlineManifests:
+    - name: cilium
+      contents: |
+        {% for line in cilium_manifest.stdout_lines -%}
+        {{ line }}
+        {% endfor -%}
+  {% endif %}
+
+  {% if enable_gateway_api -%}
+  extraManifests:
+    {% for gw_crd in gateway_api_crds %}
+    - "{{ gateway_api_crds_base_url }}/gateway.networking.k8s.io_{{ gw_crd }}.yaml"
+    {% endfor %}
+  {%- endif -%}

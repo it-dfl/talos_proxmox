@@ -37,6 +37,36 @@ enable_vlans: true
 # If enable_vlans is true the mgmt_vlan_id is used for a mgmt subinterface inside the vm, else it is used on proxmox for the VM interface vlan id
 mgmt_vlan_id: 100
 
+# Use cilium instead of flannel as CNI. If you intend to use VLANs this must be true.
+install_cilium: "{{ enable_vlans | bool }}"
+
+# Cilium version to install (must be a valid cilium helm chart version)
+cilium_version: "1.18.2"
+
+# Install Gateway API for cilium (requires cilium to be installed)
+enable_gateway_api: "{{ install_cilium | bool }}"
+
+# Gateway API CRD version to install (use version supported by cilium, e.g. v1.2.0 for cilium 1.18.x)
+gateway_api_crds_version: "v1.2.0"
+
+# Gateway API CRD source base url
+gateway_api_crds_base_url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/{{ gateway_api_crds_version }}/config/crd/standard"
+
+# Gateway API CRDs to install (if empty no CRDs will be installed)
+gateway_api_crds:
+  - gateways
+  - gatewayclasses
+  - httproutes
+  - referencegrants
+  - grpcroutes
+
+# Enable Wireguard encryption for Cilium (requires cilium to be installed)
+enable_cilium_wireguard: "{{ install_cilium | bool }}"
+
+# Enable node-to-node encryption for Cilium (requires cilium and wireguard to be enabled)
+# False means only pod to pod traffic on different nodes is encrypted
+enable_cilium_node_encryption: false
+
 k8s_vmbr: "vmbr0"
 
 masters:

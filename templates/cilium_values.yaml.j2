@@ -1,0 +1,65 @@
+ipam:
+  mode: kubernetes
+
+kubeProxyReplacement: true
+
+# Talos KubePrism (per-node localhost) so the agent reaches the real API when KPR is on
+k8sServiceHost: "127.0.0.1"
+k8sServicePort: "7445"
+
+l2announcements:
+  enabled: true
+
+# L2 uses Leases; slightly higher API client limits avoids throttling under churn
+k8sClientRateLimit:
+  qps: 50
+  burst: 150
+
+# Talos: ensure cgroup v2 mount path is correct
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# Keep autodetection for egress devices; only set 'devices' if you must constrain it
+# devices:
+#   - eth0
+
+# Capabilities: Talos guidance removes SYS_MODULE from defaults
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+operator:
+  rollOutPods: true
+
+{% if enable_gateway_api %}
+gatewayAPI:
+  enabled: true
+  enableAlpn: true
+  enableAppProtocol: true
+{% endif %}
+
+{% if enable_cilium_wireguard %}
+encryption:
+  enabled: true
+  type: wireguard
+  {% if enable_cilium_node_encryption -%}
+  nodeEncryption: true
+  {% endif %}
+{% endif %}
