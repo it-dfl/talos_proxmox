@@ -86,6 +86,6 @@ cluster:
   {% if enable_gateway_api -%}
   extraManifests:
     {% for gw_crd in gateway_api_crds %}
-    - "{{ gateway_api_crds_base_url }}/gateway.networking.k8s.io_{{ gw_crd }}.yaml"
+    - "{{ gateway_api_crds_base_url }}/{{ gw_crd.type }}/gateway.networking.k8s.io_{{ gw_crd.name }}.yaml"
     {% endfor %}
   {%- endif -%}

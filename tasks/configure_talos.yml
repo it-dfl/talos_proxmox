@@ -54,8 +54,6 @@
     src: talos_config_patch.yaml.j2
     dest: /tmp/.talos/talos_config_patch.yaml
 
-- meta: end_play
-
 - name: Create talos node patch file
   ansible.builtin.template:
     src: talos_node_patch.yaml.j2

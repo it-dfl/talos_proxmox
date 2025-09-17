@@ -50,15 +50,22 @@ enable_gateway_api: "{{ install_cilium | bool }}"
 gateway_api_crds_version: "v1.2.0"
 
 # Gateway API CRD source base url
-gateway_api_crds_base_url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/{{ gateway_api_crds_version }}/config/crd/standard"
+gateway_api_crds_base_url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/{{ gateway_api_crds_version }}/config/crd"
 
 # Gateway API CRDs to install (if empty no CRDs will be installed)
 gateway_api_crds:
-  - gateways
-  - gatewayclasses
-  - httproutes
-  - referencegrants
-  - grpcroutes
+  - type: standard
+    name: gateways
+  - type: standard
+    name: gatewayclasses
+  - type: standard
+    name: httproutes
+  - type: standard
+    name: referencegrants
+  - type: standard
+    name: grpcroutes
+  - type: experimental
+    name: tlsroutes
 
 # Enable Wireguard encryption for Cilium (requires cilium to be installed)
 enable_cilium_wireguard: "{{ install_cilium | bool }}"
