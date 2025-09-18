@@ -16,11 +16,6 @@ machine:
             vip:
               ip: {{ cluster_shared_ip }}
 {% endif %}
-{% for vlan in vlan_config %}
-          - vlanId: {{ vlan.vlan_id }}
-            addresses:
-              - "{{ (vlan.static_addresses_start | ansible.utils.ipmath(node_idx)) }}/32"
-{% endfor %}
 {% else %}
         addresses:
           - {{ node.ip }}/24

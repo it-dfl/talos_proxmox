@@ -39,8 +39,8 @@
       ansible.builtin.wait_for:
         host: "{{ cluster_shared_ip }}"
         port: 6443
-        delay: 10
-        timeout: 300
+        delay: 30
+        timeout: 500
     
     - name: Get kubeconfig from the cluster
       ansible.builtin.command: talosctl kubeconfig --nodes {{ cluster_shared_ip }} --force

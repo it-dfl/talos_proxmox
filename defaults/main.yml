@@ -109,16 +109,15 @@ workers:
     storage_disk: 200
     storage_disk_encryption_key: "topsecret" # Option key to encrypt the storage disk, if not set no encryption is used
 
+# Base interface for VLANs (e.g. eth0, ens18, ...)
+vlan_base_interface: "eth0"
+
 # VLANs for Cilium (for later service exposure)
 vlan_config:
   - name: vlan1 # only use lowercase alphanumeric characters and -
     vlan_id: 101
-    subnet: "192.168.101.0/24" # Used to exclude the subnet from kubelet nodeIP autodetection
-    static_addresses_start: "192.168.101.240" # Point from which the nodes will count up static /32 addresses for l2 announcements
   - name: vlan2
     vlan_id: 102
-    subnet: "192.168.102.0/24" # Used to exclude the subnet from kubelet nodeIP autodetection 
-    static_addresses_start: "192.168.102.240" # Point from which the nodes will count up static /32 addresses for l2 announcements
 
 # DNS nameservers used in rendered Talos machine configs. Can be overridden in inventory.
 nameservers:
@@ -128,7 +127,8 @@ nameservers:
 timeservers:
   - time.cloudflare.com
 
-disable_ipv6: true
+# Disable IPv6 if not using vlans. If using vlans using IPv6 is recommended so that cilium marks all vlan interfaces as selected.
+disable_ipv6: "{{ enable_vlans | ternary(false, true) | bool }}"
 
 # All kuberentes resources defined in static_resources will be applied after cluster creation
 # This can be used to pre create namespaces, secrets and so on

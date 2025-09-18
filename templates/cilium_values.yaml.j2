@@ -21,9 +21,13 @@ cgroup:
     enabled: false
   hostRoot: /sys/fs/cgroup
 
-# Keep autodetection for egress devices; only set 'devices' if you must constrain it
-# devices:
-#   - eth0
+{% if enable_vlans %}
+devices:
+  - "{{ vlan_base_interface }}.{{ mgmt_vlan_id }}"
+{% for vlan in vlan_config %}
+  - "{{ vlan_base_interface }}.{{ vlan.vlan_id }}"
+{% endfor %}
+{% endif %}
 
 # Capabilities: Talos guidance removes SYS_MODULE from defaults
 securityContext:

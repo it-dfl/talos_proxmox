@@ -16,6 +16,7 @@ machine:
           {% for vlan in vlan_config -%}
           - vlanId: {{ vlan.vlan_id }}
             dhcp: false
+            addresses: []
           {% endfor -%}
         {% else -%}
         routes:
@@ -57,16 +58,6 @@ machine:
     modules:
       - name: nvme_tcp
       - name: vfio_pci
-  {% endif %}
-
-  {% if enable_vlans -%}
-  kubelet:
-    nodeIP:
-      validSubnets:
-        - {{ mgmt_network }}
-        {% for vlan in vlan_config -%}
-        - '!{{ vlan.subnet }}'
-        {% endfor %}
   {% endif %}
 
 cluster:
