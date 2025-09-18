@@ -27,11 +27,11 @@ This Ansible role automates the provisioning and configuration of a Talos-based 
 1. Install talosctl: https://www.talos.dev/v1.11/talos-guides/install/talosctl/
 2. Install python dependencies:
    ```bash
-   python -m pip install requests kubernetes PyYAML jsonpatch proxmoxer jmespath
+   python -m pip install requests kubernetes PyYAML jsonpatch proxmoxer jmespath netaddr
    ```
 3. Install ansible galaxy dependencies:
    ```bash
-   ansible-galaxy collection install community.general community.proxmox kubernetes.core
+   ansible-galaxy collection install community.general community.proxmox kubernetes.core ansible.utils
    ```
 4. Install this role
    ```bash

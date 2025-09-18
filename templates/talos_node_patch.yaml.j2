@@ -7,23 +7,28 @@ machine:
       - deviceSelector:
           physical: true
         dhcp: false
-        {% if enable_vlans -%}
+{% if enable_vlans %}
         vlans:
           - vlanId: {{ mgmt_vlan_id }}
             addresses:
               - {{ node.ip }}/24
-            {% if node is in masters -%}
+{% if node in masters %}
             vip:
               ip: {{ cluster_shared_ip }}
-            {% endif -%}
-        {% else -%}
+{% endif %}
+{% for vlan in vlan_config %}
+          - vlanId: {{ vlan.vlan_id }}
+            addresses:
+              - "{{ (vlan.static_addresses_start | ansible.utils.ipmath(node_idx)) }}/32"
+{% endfor %}
+{% else %}
         addresses:
           - {{ node.ip }}/24
         {% if node is in masters -%}
         vip:
           ip: {{ cluster_shared_ip }}
-        {% endif %}
-        {% endif %}
+{% endif %}
+{% endif %}
 
   {% if enable_longhorn_support and (node.storage_disk | default(0, true) | int) > 0 -%}
   kubelet:

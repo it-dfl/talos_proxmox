@@ -52,5 +52,5 @@
   until: 
     - k8s_nodes | json_query('resources[*].status.conditions[?type==`Ready`].status') | unique == [["True"]]
     - k8s_nodes.resources | length >= (masters | length + workers | length)
-  retries: 30
+  retries: 50
   delay: 6

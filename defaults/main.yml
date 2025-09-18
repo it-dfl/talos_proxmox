@@ -109,20 +109,16 @@ workers:
     storage_disk: 200
     storage_disk_encryption_key: "topsecret" # Option key to encrypt the storage disk, if not set no encryption is used
 
-# VLANs for Multus (for later service exposure)
+# VLANs for Cilium (for later service exposure)
 vlan_config:
   - name: vlan1 # only use lowercase alphanumeric characters and -
     vlan_id: 101
-    type: static # static or host-local
-    address: "192.168.101.100/24"
-    gateway: "192.168.101.1"
-  - name: vlan2 # only use lowercase alphanumeric characters and -
+    subnet: "192.168.101.0/24" # Used to exclude the subnet from kubelet nodeIP autodetection
+    static_addresses_start: "192.168.101.240" # Point from which the nodes will count up static /32 addresses for l2 announcements
+  - name: vlan2
     vlan_id: 102
-    type: host-local # static or host-local
-    range_start: 10
-    range_end: 250
-    subnet: "192.168.102.0/24"
-    gateway: "192.168.102.1"
+    subnet: "192.168.102.0/24" # Used to exclude the subnet from kubelet nodeIP autodetection 
+    static_addresses_start: "192.168.102.240" # Point from which the nodes will count up static /32 addresses for l2 announcements
 
 # DNS nameservers used in rendered Talos machine configs. Can be overridden in inventory.
 nameservers:
@@ -174,6 +170,7 @@ static_resources: []
 # ArgoCD configuration
 # Setup argocd and deploy the app-of-apps pattern from the given repo
 install_argocd: false
+argocd_version: "v3.1.5"
 argocd_repo_url: "https://github.com/example/app-of-apps.git"
 argocd_repo_type: "git"  # or "helm"
 argocd_repo_revision: "main"

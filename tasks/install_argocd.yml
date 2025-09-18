@@ -13,7 +13,7 @@
 - name: Install ArgoCD using official manifests
   kubernetes.core.k8s:
     state: present
-    src: https://raw.githubusercontent.com/argoproj/argo-cd/refs/heads/master/manifests/install.yaml
+    src: https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/{{ argocd_version }}/manifests/install.yaml
     namespace: "{{ argocd_app_namespace }}"
 
 - name: Wait for ArgoCD server deployment to be ready

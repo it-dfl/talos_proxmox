@@ -61,6 +61,7 @@
   loop: "{{ masters + workers }}"
   loop_control:
     loop_var: node
+    index_var: node_idx
     label: "{{ node.name }}"
 
 - name: Generate talos secrets
