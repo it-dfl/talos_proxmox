@@ -1,6 +1,10 @@
 ipam:
   mode: kubernetes
 
+hubble:
+  relay:
+    enabled: true
+
 kubeProxyReplacement: true
 
 # Talos KubePrism (per-node localhost) so the agent reaches the real API when KPR is on
